@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Store, Users, CreditCard, Receipt,
   ShoppingBag, BarChart3, Settings, LogOut, Shield, Menu as MenuIcon,
-  ScrollText, Crown, Wallet,
+  ScrollText, Crown, Wallet, Sun, Moon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -26,8 +27,10 @@ const navItems = [
 
 export default function AdminLayout() {
   const { signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const Sidebar = (
     <aside className="w-64 shrink-0 bg-card border-r border-border h-screen sticky top-0 flex flex-col">
@@ -89,6 +92,9 @@ export default function AdminLayout() {
             <p className="font-heading font-bold lg:hidden">Super Admin</p>
           </div>
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setTheme(isDark ? 'light' : 'dark')} aria-label="Toggle theme">
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             <AdminNotificationBell />
           </div>
         </header>
