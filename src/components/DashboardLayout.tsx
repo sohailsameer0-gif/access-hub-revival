@@ -8,6 +8,7 @@ import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, LayoutDashboard, Store, UtensilsCrossed as MenuIcon, TableProperties, ShoppingCart, QrCode, CreditCard, Settings, LogOut, Menu, X, AlertTriangle, FileBarChart, Crown } from 'lucide-react';
 import OutletNotificationBell from '@/components/outlet/OutletNotificationBell';
+import SupportWhatsAppFab from '@/components/outlet/SupportWhatsAppFab';
 
 const navItems = [
   { to: '/outlet', icon: LayoutDashboard, label: 'Overview', end: true },
@@ -147,6 +148,7 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+      <SupportWhatsAppFab prefilledMessage={outlet?.name ? `Hello Admin Support, I need help with my outlet "${outlet.name}".` : undefined} />
     </div>
   );
 }
