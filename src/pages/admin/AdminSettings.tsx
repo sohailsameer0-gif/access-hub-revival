@@ -45,7 +45,9 @@ export default function AdminSettings() {
       premium_enable_delivery: !!form.premium_enable_delivery,
       premium_enable_reports: !!form.premium_enable_reports,
       premium_enable_branding: !!form.premium_enable_branding,
-    });
+      support_whatsapp: (form.support_whatsapp ?? '').trim(),
+      support_email: (form.support_email ?? '').trim(),
+    } as any);
     toast.success('Platform settings saved');
   };
 
