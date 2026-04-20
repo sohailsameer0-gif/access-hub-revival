@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, MessageCircle, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSettings() {
@@ -45,7 +45,9 @@ export default function AdminSettings() {
       premium_enable_delivery: !!form.premium_enable_delivery,
       premium_enable_reports: !!form.premium_enable_reports,
       premium_enable_branding: !!form.premium_enable_branding,
-    });
+      support_whatsapp: (form.support_whatsapp ?? '').trim(),
+      support_email: (form.support_email ?? '').trim(),
+    } as any);
     toast.success('Platform settings saved');
   };
 
@@ -57,6 +59,24 @@ export default function AdminSettings() {
         <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Platform Settings</h1>
         <p className="text-muted-foreground text-sm">Global controls for plan pricing, limits and features. Changes apply to all outlets immediately.</p>
       </div>
+
+      {/* Support Contact */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><MessageCircle className="h-5 w-5 text-primary" /> Support Contact</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">These are shown to all outlet owners as the official admin support contact.</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> WhatsApp Number</Label>
+              <Input placeholder="+92 300 1234567" value={form.support_whatsapp ?? ''} onChange={e => set('support_whatsapp', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> Support Email</Label>
+              <Input placeholder="support@example.com" value={form.support_email ?? ''} onChange={e => set('support_email', e.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Subscription Approval */}
       <Card>

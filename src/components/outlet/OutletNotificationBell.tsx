@@ -29,9 +29,10 @@ interface Props {
 
 export default function OutletNotificationBell({ outletId }: Props) {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAllRead } = useOutletNotifications(outletId);
+  const { notifications, unreadCount, markRead, markAllRead } = useOutletNotifications(outletId);
 
-  const handleClick = (href: string) => {
+  const handleClick = (id: string, href: string) => {
+    markRead(id);
     navigate(href);
   };
 
@@ -80,7 +81,7 @@ export default function OutletNotificationBell({ outletId }: Props) {
                 return (
                   <li key={n.id}>
                     <button
-                      onClick={() => handleClick(n.href)}
+                      onClick={() => handleClick(n.id, n.href)}
                       className={cn(
                         'w-full text-left p-3 flex items-start gap-3 hover:bg-accent/50 transition-colors',
                         n.unread && 'bg-primary/5',

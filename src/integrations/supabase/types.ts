@@ -729,6 +729,8 @@ export type Database = {
           standard_max_menu_items: number
           standard_max_tables: number
           standard_plan_price: number
+          support_email: string
+          support_whatsapp: string
           updated_at: string
         }
         Insert: {
@@ -755,6 +757,8 @@ export type Database = {
           standard_max_menu_items?: number
           standard_max_tables?: number
           standard_plan_price?: number
+          support_email?: string
+          support_whatsapp?: string
           updated_at?: string
         }
         Update: {
@@ -781,6 +785,8 @@ export type Database = {
           standard_max_menu_items?: number
           standard_max_tables?: number
           standard_plan_price?: number
+          support_email?: string
+          support_whatsapp?: string
           updated_at?: string
         }
         Relationships: []
