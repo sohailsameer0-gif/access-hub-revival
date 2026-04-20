@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Store, UtensilsCrossed, TableProperties, ShoppingCart, AlertTriangle, ArrowRight, Crown } from 'lucide-react';
+import SupportContactCard from '@/components/outlet/SupportContactCard';
 
 export default function DashboardOverview() {
   const { data: outlet, isLoading } = useOutlet();
@@ -147,6 +148,8 @@ export default function DashboardOverview() {
           </CardContent>
         </Card>
       )}
+
+      <SupportContactCard />
     </div>
   );
 }
