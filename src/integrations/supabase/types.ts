@@ -908,6 +908,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_outlet_active: { Args: { _outlet_id: string }; Returns: boolean }
+      owns_active_outlet: { Args: { _outlet_id: string }; Returns: boolean }
       stamp_password_changed: { Args: never; Returns: undefined }
       verify_outlet_otp: { Args: { _code: string }; Returns: Json }
     }
