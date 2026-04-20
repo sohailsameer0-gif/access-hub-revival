@@ -39,15 +39,27 @@ export default function AdminOutlets() {
     toast.success(`${o.name} rejected`);
   };
   const handleSuspend = async (o: any) => {
-    await updateOutlet.mutateAsync({ id: o.id, suspended: true });
-    const sub = o.subscriptions?.[0];
-    if (sub) await updateSub.mutateAsync({ id: sub.id, status: 'suspended' });
+    const reason = window.prompt(
+      `Suspend ${o.name}?\n\nThis will block the outlet from accessing the platform. Optionally enter a reason that will be shown to the owner:`,
+      ''
+    );
+    if (reason === null) return; // user cancelled
+    await updateOutlet.mutateAsync({
+      id: o.id,
+      suspended: true,
+      suspended_reason: reason.trim() || null,
+    });
+    // subscription status is auto-mirrored by DB trigger; no manual update needed
     toast.success(`${o.name} suspended`);
   };
   const handleReactivate = async (o: any) => {
-    await updateOutlet.mutateAsync({ id: o.id, suspended: false, is_active: true });
-    const sub = o.subscriptions?.[0];
-    if (sub) await updateSub.mutateAsync({ id: sub.id, status: 'active' });
+    await updateOutlet.mutateAsync({
+      id: o.id,
+      suspended: false,
+      is_active: true,
+      suspended_reason: null,
+    });
+    // subscription status is auto-restored by DB trigger
     toast.success(`${o.name} reactivated`);
   };
 
