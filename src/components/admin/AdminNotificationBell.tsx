@@ -27,9 +27,10 @@ const KIND_COLOR: Record<AdminNotificationKind, string> = {
 
 export default function AdminNotificationBell() {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAllRead } = useAdminNotifications();
+  const { notifications, unreadCount, markRead, markAllRead } = useAdminNotifications();
 
-  const handleClick = (href: string) => {
+  const handleClick = (id: string, href: string) => {
+    markRead(id);
     navigate(href);
   };
 
@@ -78,7 +79,7 @@ export default function AdminNotificationBell() {
                 return (
                   <li key={n.id}>
                     <button
-                      onClick={() => handleClick(n.href)}
+                      onClick={() => handleClick(n.id, n.href)}
                       className={cn(
                         'w-full text-left p-3 flex items-start gap-3 hover:bg-accent/50 transition-colors',
                         n.unread && 'bg-primary/5',
