@@ -47,6 +47,8 @@ export interface PlatformSettingsLike {
   premium_enable_delivery: boolean;
   premium_enable_reports: boolean;
   premium_enable_branding: boolean;
+  support_whatsapp?: string;
+  support_email?: string;
 }
 
 /** Sensible fallbacks if platform_settings hasn't loaded yet */
@@ -71,6 +73,8 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettingsLike = {
   premium_enable_delivery: true,
   premium_enable_reports: true,
   premium_enable_branding: true,
+  support_whatsapp: '',
+  support_email: '',
 };
 
 export function getPlanLimits(plan: PlanKey, settings: PlatformSettingsLike): PlanLimits {
