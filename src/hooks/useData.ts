@@ -18,6 +18,9 @@ export function useOutlet() {
       return data;
     },
     enabled: !!user,
+    // Re-check suspension/approval state regularly so admin actions take effect quickly
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
 }
 

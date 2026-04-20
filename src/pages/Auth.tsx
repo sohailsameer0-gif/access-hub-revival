@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { lovable } from '@/integrations/lovable/index';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Eye, EyeOff, UtensilsCrossed } from 'lucide-react';
+import { Eye, EyeOff, UtensilsCrossed, Loader2 } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup' | 'forgot';
 
@@ -22,15 +22,21 @@ export default function Auth() {
   const { signIn, signUp, resetPassword, user, isAdmin, isOutletOwner } = useAuth();
   const navigate = useNavigate();
 
-  // Role-based post-login redirect: admin -> /admin, outlet -> /outlet
-  const goHome = () => {
-    if (isAdmin) navigate('/admin');
-    else navigate('/outlet');
-  };
+  // Role-based post-login redirect: admin -> /admin, outlet -> /outlet.
+  // Done in an effect to avoid "navigate during render" warnings and Google-OAuth races.
+  useEffect(() => {
+    if (!user) return;
+    if (isAdmin) navigate('/admin', { replace: true });
+    else if (isOutletOwner) navigate('/outlet', { replace: true });
+    // If roles haven't loaded yet, the next auth-state tick will re-run this effect.
+  }, [user, isAdmin, isOutletOwner, navigate]);
 
   if (user) {
-    goHome();
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleGoogleSignIn = async () => {
@@ -67,8 +73,7 @@ export default function Auth() {
         const { error } = await signIn(email, password);
         if (error) throw error;
         toast.success('Welcome back!');
-        // Defer to context-driven redirect after roles load
-        setTimeout(() => goHome(), 100);
+        // The redirect happens in the useEffect once auth + roles update.
       } else if (mode === 'signup') {
         const { error } = await signUp(email, password);
         if (error) throw error;
