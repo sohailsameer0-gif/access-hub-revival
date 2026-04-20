@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string
+          created_at: string
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      admin_payment_methods: {
+        Row: {
+          account_number: string | null
+          account_title: string | null
+          bank_name: string | null
+          created_at: string
+          iban: string | null
+          id: string
+          instructions: string | null
+          is_active: boolean
+          label: string
+          qr_image_url: string | null
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_title?: string | null
+          bank_name?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label: string
+          qr_image_url?: string | null
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          account_title?: string | null
+          bank_name?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label?: string
+          qr_image_url?: string | null
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bill_requests: {
         Row: {
           created_at: string
@@ -279,6 +363,71 @@ export type Database = {
           },
         ]
       }
+      outlet_access: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          blocked_at: string | null
+          created_at: string
+          id: string
+          last_password_changed_at: string | null
+          otp_attempts: number
+          otp_code_hash: string | null
+          otp_expires_at: string | null
+          otp_max_attempts: number
+          otp_plain_for_admin: string | null
+          outlet_id: string
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["outlet_access_status"]
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          blocked_at?: string | null
+          created_at?: string
+          id?: string
+          last_password_changed_at?: string | null
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_expires_at?: string | null
+          otp_max_attempts?: number
+          otp_plain_for_admin?: string | null
+          outlet_id: string
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["outlet_access_status"]
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          blocked_at?: string | null
+          created_at?: string
+          id?: string
+          last_password_changed_at?: string | null
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_expires_at?: string | null
+          otp_max_attempts?: number
+          otp_plain_for_admin?: string | null
+          outlet_id?: string
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["outlet_access_status"]
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outlet_access_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: true
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outlet_settings: {
         Row: {
           bank_account_number: string | null
@@ -505,32 +654,133 @@ export type Database = {
           },
         ]
       }
-      platform_settings: {
+      plan_requests: {
         Row: {
-          basic_plan_price: number
+          admin_note: string | null
+          amount: number
           created_at: string
-          demo_duration_days: number
-          enable_demo_signup: boolean
           id: string
-          pro_plan_price: number
+          method: Database["public"]["Enums"]["payment_method"] | null
+          outlet_id: string
+          proof_url: string | null
+          requested_plan: Database["public"]["Enums"]["subscription_plan"]
+          status: string
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
-          basic_plan_price?: number
+          admin_note?: string | null
+          amount?: number
           created_at?: string
-          demo_duration_days?: number
-          enable_demo_signup?: boolean
           id?: string
-          pro_plan_price?: number
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          outlet_id: string
+          proof_url?: string | null
+          requested_plan: Database["public"]["Enums"]["subscription_plan"]
+          status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          outlet_id?: string
+          proof_url?: string | null
+          requested_plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_requests_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          auto_approve_subscriptions: boolean
+          basic_enable_delivery: boolean
+          basic_enable_reports: boolean
+          basic_max_menu_items: number
+          basic_max_tables: number
+          basic_plan_price: number
+          created_at: string
+          demo_duration_days: number
+          demo_max_menu_items: number
+          demo_max_tables: number
+          enable_demo_signup: boolean
+          id: string
+          premium_enable_branding: boolean
+          premium_enable_delivery: boolean
+          premium_enable_reports: boolean
+          premium_max_menu_items: number
+          premium_max_tables: number
+          pro_plan_price: number
+          standard_enable_delivery: boolean
+          standard_enable_reports: boolean
+          standard_max_menu_items: number
+          standard_max_tables: number
+          standard_plan_price: number
+          updated_at: string
+        }
+        Insert: {
+          auto_approve_subscriptions?: boolean
+          basic_enable_delivery?: boolean
+          basic_enable_reports?: boolean
+          basic_max_menu_items?: number
+          basic_max_tables?: number
           basic_plan_price?: number
           created_at?: string
           demo_duration_days?: number
+          demo_max_menu_items?: number
+          demo_max_tables?: number
           enable_demo_signup?: boolean
           id?: string
+          premium_enable_branding?: boolean
+          premium_enable_delivery?: boolean
+          premium_enable_reports?: boolean
+          premium_max_menu_items?: number
+          premium_max_tables?: number
           pro_plan_price?: number
+          standard_enable_delivery?: boolean
+          standard_enable_reports?: boolean
+          standard_max_menu_items?: number
+          standard_max_tables?: number
+          standard_plan_price?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_approve_subscriptions?: boolean
+          basic_enable_delivery?: boolean
+          basic_enable_reports?: boolean
+          basic_max_menu_items?: number
+          basic_max_tables?: number
+          basic_plan_price?: number
+          created_at?: string
+          demo_duration_days?: number
+          demo_max_menu_items?: number
+          demo_max_tables?: number
+          enable_demo_signup?: boolean
+          id?: string
+          premium_enable_branding?: boolean
+          premium_enable_delivery?: boolean
+          premium_enable_reports?: boolean
+          premium_max_menu_items?: number
+          premium_max_tables?: number
+          pro_plan_price?: number
+          standard_enable_delivery?: boolean
+          standard_enable_reports?: boolean
+          standard_max_menu_items?: number
+          standard_max_tables?: number
+          standard_plan_price?: number
           updated_at?: string
         }
         Relationships: []
@@ -542,6 +792,7 @@ export type Database = {
           demo_start_date: string | null
           id: string
           outlet_id: string
+          paid_until: string | null
           plan: Database["public"]["Enums"]["subscription_plan"]
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
@@ -552,6 +803,7 @@ export type Database = {
           demo_start_date?: string | null
           id?: string
           outlet_id: string
+          paid_until?: string | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
@@ -562,6 +814,7 @@ export type Database = {
           demo_start_date?: string | null
           id?: string
           outlet_id?: string
+          paid_until?: string | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
@@ -637,6 +890,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _gen_otp_code: { Args: never; Returns: string }
+      admin_approve_outlet: { Args: { _outlet_id: string }; Returns: Json }
+      admin_regenerate_outlet_otp: {
+        Args: { _outlet_id: string }
+        Returns: Json
+      }
+      admin_reject_outlet: {
+        Args: { _outlet_id: string; _reason?: string }
+        Returns: Json
+      }
+      expire_lapsed_subscriptions: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -644,6 +908,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      stamp_password_changed: { Args: never; Returns: undefined }
+      verify_outlet_otp: { Args: { _code: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "outlet_owner"
@@ -666,10 +932,16 @@ export type Database = {
         | "out_for_delivery"
         | "delivered"
       order_type: "dine_in" | "takeaway" | "delivery"
+      outlet_access_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "verified"
+        | "blocked"
       outlet_approval_status: "pending" | "approved" | "rejected"
       payment_method: "cash" | "bank_transfer" | "jazzcash" | "easypaisa"
       payment_status: "unpaid" | "pending_verification" | "paid" | "rejected"
-      subscription_plan: "free_demo" | "basic" | "pro"
+      subscription_plan: "free_demo" | "basic" | "standard" | "pro"
       subscription_status: "active" | "expired" | "paid_active" | "suspended"
     }
     CompositeTypes: {
@@ -820,10 +1092,17 @@ export const Constants = {
         "delivered",
       ],
       order_type: ["dine_in", "takeaway", "delivery"],
+      outlet_access_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "verified",
+        "blocked",
+      ],
       outlet_approval_status: ["pending", "approved", "rejected"],
       payment_method: ["cash", "bank_transfer", "jazzcash", "easypaisa"],
       payment_status: ["unpaid", "pending_verification", "paid", "rejected"],
-      subscription_plan: ["free_demo", "basic", "pro"],
+      subscription_plan: ["free_demo", "basic", "standard", "pro"],
       subscription_status: ["active", "expired", "paid_active", "suspended"],
     },
   },
