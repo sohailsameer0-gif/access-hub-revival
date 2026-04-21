@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, QrCode, ShoppingCart, Receipt, Smartphone, ChevronRight } from 'lucide-react';
+import { UtensilsCrossed, QrCode, ShoppingCart, Receipt, Smartphone, ChevronRight, Sun, Moon } from 'lucide-react';
 import heroImage from '@/assets/hero-illustration.jpg';
+import { useTheme } from '@/lib/theme';
 
 const features = [
   { icon: UtensilsCrossed, title: 'Digital Menu', description: 'Create a beautiful digital menu your customers can browse on their phones.' },
