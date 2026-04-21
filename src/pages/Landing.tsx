@@ -20,6 +20,8 @@ const steps = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,6 +35,15 @@ export default function Landing() {
             <span className="font-heading text-xl font-bold text-foreground">MenuQR</span>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              aria-label="Toggle theme"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/auth')}>Sign In</Button>
             <Button variant="hero" onClick={() => navigate('/auth')}>Start Free Demo</Button>
           </div>
