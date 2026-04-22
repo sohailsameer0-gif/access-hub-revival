@@ -42,11 +42,12 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Redirect back to /auth so the post-login useEffect picks up the session
-      // and routes the user to /admin or /outlet based on their role.
-      // (Returning to "/" landed users on the homepage with no auto-redirect.)
+      // Always send the OAuth provider back to a dedicated /auth/callback route.
+      // That route handles token-fragment / PKCE recovery and then routes the
+      // user to /admin or /outlet based on role. Using a dedicated callback URL
+      // keeps the flow predictable across Netlify, Vercel, and Cloudflare.
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
+        redirect_uri: `${window.location.origin}/auth/callback`,
       });
 
       if (result.error) {

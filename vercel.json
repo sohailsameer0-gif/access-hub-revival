@@ -11,6 +11,7 @@
   },
   "rewrites": [
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/auth/callback", "destination": "/api/ssr" },
     { "source": "/(.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|txt|xml|webmanifest|js|css|woff|woff2|ttf|otf|map))", "destination": "/$1" },
     { "source": "/(.*)", "destination": "/api/ssr" }
   ]
