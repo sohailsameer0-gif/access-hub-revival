@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, QrCode, ShoppingCart, Receipt, Smartphone, ChevronRight, Sun, Moon } from 'lucide-react';
 import heroImage from '@/assets/hero-illustration.jpg';
 import { useTheme } from '@/lib/theme';
+import { useAuth } from '@/lib/auth';
 
 const features = [
   { icon: UtensilsCrossed, title: 'Digital Menu', description: 'Create a beautiful digital menu your customers can browse on their phones.' },
@@ -21,7 +23,15 @@ const steps = [
 export default function Landing() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { user, isAdmin, isOutletOwner, loading } = useAuth();
   const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Auto-redirect signed-in users (incl. OAuth callbacks landing on "/") to their panel.
+  useEffect(() => {
+    if (loading || !user) return;
+    if (isAdmin) navigate('/admin', { replace: true });
+    else if (isOutletOwner) navigate('/outlet', { replace: true });
+  }, [user, isAdmin, isOutletOwner, loading, navigate]);
 
   return (
     <div className="min-h-screen bg-background">

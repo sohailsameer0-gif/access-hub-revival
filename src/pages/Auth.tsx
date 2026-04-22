@@ -42,8 +42,11 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      // Redirect back to /auth so the post-login useEffect picks up the session
+      // and routes the user to /admin or /outlet based on their role.
+      // (Returning to "/" landed users on the homepage with no auto-redirect.)
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth`,
       });
 
       if (result.error) {
