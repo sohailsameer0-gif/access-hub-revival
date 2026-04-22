@@ -5,7 +5,10 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn("404: non-existent route:", location.pathname);
+    }
   }, [location.pathname]);
 
   return (

@@ -31,7 +31,7 @@ export default function MenuHeader({ outlet }: MenuHeaderProps) {
         {/* Quick action buttons */}
         <div className="absolute top-4 right-4 flex gap-2">
           {outlet.whatsapp && (
-            <a href={`https://wa.me/${outlet.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener"
+            <a href={`https://wa.me/${outlet.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform">
               <MessageCircle className="h-[18px] w-[18px] text-primary" />
             </a>
@@ -43,7 +43,7 @@ export default function MenuHeader({ outlet }: MenuHeaderProps) {
             </a>
           )}
           {outlet.google_maps_link && (
-            <a href={outlet.google_maps_link} target="_blank" rel="noopener"
+            <a href={outlet.google_maps_link} target="_blank" rel="noopener noreferrer"
               className="h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform">
               <MapPin className="h-[18px] w-[18px] text-primary" />
             </a>
