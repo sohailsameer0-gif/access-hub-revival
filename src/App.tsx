@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import PublicMenu from "./pages/PublicMenu";
 import DashboardLayout from "./components/DashboardLayout";
@@ -49,6 +50,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/menu/:slug" element={<PublicMenu />} />
               <Route path="/outlet/verify" element={<ProtectedRoute requireOutletOwner><OutletVerify /></ProtectedRoute>} />

@@ -4,8 +4,9 @@
 #   - dist/client → static client assets (JS, CSS, images, fonts, icons)
 #   - dist/server → SSR worker entry (consumed by netlify/functions/ssr.mjs)
 #
-# Static assets are served directly from dist/client. Any request that does
-# not match a static file is handled by the SSR function below.
+# Static assets in dist/client are served directly. Any other request
+# (including SPA deep links such as /auth, /auth/callback, /admin, /outlet/*)
+# falls through to the SSR function below, which boots the React app.
 
 [build]
   command = "npm install --legacy-peer-deps && npm run build"
@@ -30,6 +31,15 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+
+# Explicit fallback for /auth/callback so OAuth redirects always reach the SSR
+# function even if a stale CDN entry would otherwise 404. `force = true` here
+# guarantees the rewrite wins for this exact path.
+[[redirects]]
+  from = "/auth/callback"
+  to = "/.netlify/functions/ssr"
+  status = 200
+  force = true
 
 # SPA / SSR fallback: any path not served as a static asset is handled
 # by the SSR function. `force = false` ensures real files win first.
