@@ -1,0 +1,23 @@
+# Netlify deployment configuration for this TanStack Start app.
+#
+# This project is an SSR app (TanStack Start). The build produces:
+#   - dist/client → static client assets (JS, CSS, images)
+#   - dist/server → SSR worker entry (used by the Netlify Function below)
+#
+# Static assets are served from dist/client. Any request that doesn't match
+# a static file is handled by the SSR function in netlify/functions/ssr.mjs.
+
+[build]
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "dist/client"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Fall back to the SSR function for any path not served as a static asset.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/ssr"
+  status = 200
