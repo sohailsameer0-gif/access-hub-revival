@@ -1,11 +1,11 @@
-# Netlify deployment configuration for this TanStack Start app.
+# Netlify deployment configuration for this TanStack Start (SSR) app.
 #
-# This project is an SSR app (TanStack Start). The build produces:
-#   - dist/client → static client assets (JS, CSS, images)
-#   - dist/server → SSR worker entry (used by the Netlify Function below)
+# Build outputs:
+#   - dist/client → static client assets (JS, CSS, images, fonts, icons)
+#   - dist/server → SSR worker entry (consumed by netlify/functions/ssr.mjs)
 #
-# Static assets are served from dist/client. Any request that doesn't match
-# a static file is handled by the SSR function in netlify/functions/ssr.mjs.
+# Static assets are served directly from dist/client. Any request that does
+# not match a static file is handled by the SSR function below.
 
 [build]
   command = "npm install --legacy-peer-deps && npm run build"
@@ -16,8 +16,25 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Fall back to the SSR function for any path not served as a static asset.
+# Long-cache hashed build assets.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Security headers for all responses.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+
+# SPA / SSR fallback: any path not served as a static asset is handled
+# by the SSR function. `force = false` ensures real files win first.
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/ssr"
   status = 200
+  force = false

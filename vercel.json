@@ -1,9 +1,17 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
   "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": "dist/client",
   "framework": null,
+  "functions": {
+    "api/ssr.mjs": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/(.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|txt|xml|webmanifest|js|css|woff|woff2|ttf|otf|map))", "destination": "/$1" },
+    { "source": "/(.*)", "destination": "/api/ssr" }
   ]
 }
