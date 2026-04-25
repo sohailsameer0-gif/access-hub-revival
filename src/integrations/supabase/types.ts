@@ -1043,12 +1043,24 @@ export type Database = {
     Functions: {
       _gen_otp_code: { Args: never; Returns: string }
       admin_approve_outlet: { Args: { _outlet_id: string }; Returns: Json }
+      admin_approve_plan_request: {
+        Args: { _admin_note?: string; _request_id: string }
+        Returns: Json
+      }
       admin_regenerate_outlet_otp: {
         Args: { _outlet_id: string }
         Returns: Json
       }
       admin_reject_outlet: {
         Args: { _outlet_id: string; _reason?: string }
+        Returns: Json
+      }
+      admin_reject_plan_request: {
+        Args: { _admin_note?: string; _request_id: string }
+        Returns: Json
+      }
+      admin_reset_outlet_activity: {
+        Args: { _outlet_id: string; _reason: string; _types: string[] }
         Returns: Json
       }
       expire_lapsed_subscriptions: { Args: never; Returns: number }
