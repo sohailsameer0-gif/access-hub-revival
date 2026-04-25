@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, QrCode, ShoppingCart, Receipt, Smartphone, ChevronRight, Sun, Moon } from 'lucide-react';
 import heroImage from '@/assets/hero-illustration.jpg';
+import logoImage from '@/assets/menuqr-logo.png';
 import { useTheme } from '@/lib/theme';
 import { useAuth } from '@/lib/auth';
 
@@ -39,9 +40,14 @@ export default function Landing() {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-              <UtensilsCrossed className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img
+              src={logoImage}
+              alt="MenuQR logo"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-lg object-contain"
+              decoding="async"
+            />
             <span className="font-heading text-xl font-bold text-foreground">MenuQR</span>
           </div>
           <div className="flex items-center gap-2">

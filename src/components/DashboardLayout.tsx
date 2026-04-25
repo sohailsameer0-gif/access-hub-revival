@@ -6,7 +6,8 @@ import { useResolvedSubscription } from '@/hooks/useSubscription';
 import { PLAN_LABEL } from '@/lib/plans';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, LayoutDashboard, Store, UtensilsCrossed as MenuIcon, TableProperties, ShoppingCart, QrCode, CreditCard, Settings, LogOut, Menu, X, AlertTriangle, FileBarChart, Crown } from 'lucide-react';
+import { UtensilsCrossed, LayoutDashboard, Store, UtensilsCrossed as MenuIcon, TableProperties, ShoppingCart, QrCode, CreditCard, Settings, LogOut, Menu, X, AlertTriangle, FileBarChart, Crown, Users } from 'lucide-react';
+import logoImage from '@/assets/menuqr-logo.png';
 import OutletNotificationBell from '@/components/outlet/OutletNotificationBell';
 import SupportWhatsAppFab from '@/components/outlet/SupportWhatsAppFab';
 
@@ -16,6 +17,7 @@ const navItems = [
   { to: '/outlet/menu', icon: MenuIcon, label: 'Menu' },
   { to: '/outlet/tables', icon: TableProperties, label: 'Tables' },
   { to: '/outlet/orders', icon: ShoppingCart, label: 'Orders' },
+  { to: '/outlet/staff', icon: Users, label: 'Staff' },
   { to: '/outlet/qr', icon: QrCode, label: 'QR Codes' },
   { to: '/outlet/payments', icon: CreditCard, label: 'Payments' },
   { to: '/outlet/reports', icon: FileBarChart, label: 'Reports' },
@@ -65,9 +67,14 @@ export default function DashboardLayout() {
         <aside className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-card border-r transition-transform duration-200 lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex h-full flex-col">
             <div className="flex h-14 items-center gap-2 border-b px-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-                <UtensilsCrossed className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <img
+                src={logoImage}
+                alt="MenuQR logo"
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-lg object-contain"
+                decoding="async"
+              />
               <span className="font-heading font-bold text-foreground">MenuQR</span>
             </div>
 

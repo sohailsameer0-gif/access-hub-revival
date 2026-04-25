@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { lovable } from '@/integrations/lovable/index';
+import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,27 +42,20 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Always send the OAuth provider back to a dedicated /auth/callback route.
-      // That route handles token-fragment / PKCE recovery and then routes the
-      // user to /admin or /outlet based on role. Using a dedicated callback URL
-      // keeps the flow predictable across Netlify, Vercel, and Cloudflare.
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: `${window.location.origin}/auth/callback`,
       });
 
       if (result.error) {
-        toast.error('Google sign-in failed. Please try again.');
+        console.error('[GoogleSignIn] error:', result.error);
+        toast.error(result.error.message || 'Google sign-in failed');
         return;
       }
-
-      if (result.redirected) {
-        return;
-      }
-
-      toast.success('Welcome!');
-      // After sign-in the auth context updates and the `if (user)` guard above redirects.
+      if (result.redirected) return; // browser is redirecting to Google
+      // Tokens received & session set — useEffect handles role-based redirect
     } catch (err: any) {
-      toast.error(err.message || 'Google sign-in failed');
+      console.error('[GoogleSignIn] exception:', err);
+      toast.error(err?.message || 'Google sign-in failed');
     } finally {
       setGoogleLoading(false);
     }

@@ -11,6 +11,7 @@ import { CheckCircle2, XCircle, Ban, Play, Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import OutletAccessCard from '@/components/admin/OutletAccessCard';
+import ResetOutletActivityDialog from '@/components/admin/ResetOutletActivityDialog';
 
 export default function AdminOutlets() {
   const { data: outlets, isLoading } = useAdminOutlets();
@@ -146,6 +147,7 @@ export default function AdminOutlets() {
                             {o.suspended && (
                               <Button size="sm" onClick={() => handleReactivate(o)}><Play className="h-3 w-3 mr-1" />Reactivate</Button>
                             )}
+                            <ResetOutletActivityDialog outletId={o.id} outletName={o.name} />
                           </div>
                         </TableCell>
                       </TableRow>

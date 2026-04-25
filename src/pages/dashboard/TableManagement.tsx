@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useOutlet, useTables, useCreateTable, useDeleteTable, useSubscriptionStatus } from '@/hooks/useData';
+import { useOutlet, useTables, useCreateTable, useDeleteTable } from '@/hooks/useData';
+import { useResolvedSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,20 +10,22 @@ import { Plus, Trash2, TableProperties, AlertTriangle } from 'lucide-react';
 export default function TableManagement() {
   const { data: outlet } = useOutlet();
   const { data: tables } = useTables(outlet?.id);
-  const { data: sub } = useSubscriptionStatus(outlet?.id);
+  const { data: sub } = useResolvedSubscription(outlet?.id);
   const createTable = useCreateTable();
   const deleteTable = useDeleteTable();
   const [tableNumber, setTableNumber] = useState('');
   const [tableName, setTableName] = useState('');
 
-  const canAdd = !sub?.isDemo || (tables?.length ?? 0) < 3;
-  const isLocked = sub?.isExpired;
+  const tableLimit = sub?.limits?.maxTables ?? 0; // 0 = unlimited
+  const currentTableCount = tables?.length ?? 0;
+  const canAdd = !sub?.canAccessApp ? false : (tableLimit === 0 || currentTableCount < tableLimit);
+  const isLocked = !sub?.canAccessApp;
 
   if (!outlet) return <p className="text-muted-foreground">Please set up your outlet first.</p>;
 
   const handleAdd = async () => {
     if (!tableNumber.trim()) return;
-    if (!canAdd) return toast.error('Demo limit reached (3 tables)');
+    if (!canAdd) return toast.error(tableLimit > 0 ? `Plan limit reached (${tableLimit} tables). Upgrade to add more.` : 'Your plan does not allow adding tables right now.');
     try {
       await createTable.mutateAsync({ table_number: tableNumber, name: tableName || undefined, outlet_id: outlet.id });
       setTableNumber('');
@@ -35,7 +38,7 @@ export default function TableManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Tables</h1>
-        <p className="text-muted-foreground">{tables?.length ?? 0} tables{sub?.isDemo ? '/3' : ''}</p>
+        <p className="text-muted-foreground">{currentTableCount} tables{tableLimit > 0 ? `/${tableLimit}` : ''}</p>
       </div>
 
       {isLocked && (

@@ -9,7 +9,8 @@ export type OutletNotificationKind =
   | 'subscription_expired'
   | 'plan_request_approved'
   | 'plan_request_rejected'
-  | 'order_pending';
+  | 'activity_reset'
+  | 'admin_message';
 
 export interface OutletNotification {
   id: string;
@@ -67,10 +68,12 @@ export function useOutletNotifications(outletId?: string) {
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<OutletNotification[]> => {
       const since14d = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-      const [subRes, reqRes, orderRes] = await Promise.all([
+      // NOTE: Order notifications are intentionally NOT shown in the bell icon.
+      // Orders have their own counter + sound system in the Orders dashboard.
+      const [subRes, reqRes, msgRes] = await Promise.all([
         supabase.from('subscriptions').select('id, plan, status, paid_until, demo_end_date, updated_at').eq('outlet_id', outletId!).maybeSingle(),
         supabase.from('plan_requests').select('id, requested_plan, status, admin_note, updated_at').eq('outlet_id', outletId!).in('status', ['approved', 'rejected']).gte('updated_at', since14d).order('updated_at', { ascending: false }).limit(20),
-        supabase.from('orders').select('id, created_at, customer_name, total').eq('outlet_id', outletId!).eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
+        (supabase as any).from('outlet_messages').select('id, kind, title, body, created_at, read_at').eq('outlet_id', outletId!).gte('created_at', since14d).order('created_at', { ascending: false }).limit(30),
       ]);
 
       const list: OutletNotification[] = [];
@@ -98,7 +101,21 @@ export function useOutletNotifications(outletId?: string) {
         else if (r.status === 'rejected') list.push({ id: `req_rejected:${r.id}`, kind: 'plan_request_rejected', title: `${planLabel} request rejected`, description: r.admin_note ? `Reason: ${r.admin_note}` : 'Your subscription request was rejected. Please try again.', createdAt: r.updated_at, href: '/outlet/subscribe', unread: false });
       });
 
-      (orderRes.data ?? []).forEach((o: any) => list.push({ id: `order:${o.id}`, kind: 'order_pending', title: 'New order awaiting action', description: `${o.customer_name || 'Customer'} · Rs. ${Number(o.total ?? 0).toLocaleString()}`, createdAt: o.created_at, href: '/outlet/orders', unread: false }));
+      // Order notifications removed from bell — handled by Orders dashboard counter + sound
+
+
+      (msgRes.data ?? []).forEach((m: any) => {
+        const kind: OutletNotificationKind = m.kind === 'activity_reset' ? 'activity_reset' : 'admin_message';
+        list.push({
+          id: `msg:${m.id}`,
+          kind,
+          title: m.title,
+          description: m.body,
+          createdAt: m.created_at,
+          href: '/outlet',
+          unread: !m.read_at,
+        });
+      });
 
       list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
       return list;

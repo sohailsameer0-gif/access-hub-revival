@@ -199,13 +199,21 @@ export function useUpdatePlanRequest() {
         .eq('id', params.id)
         .maybeSingle();
 
-      const { error } = await supabase
-        .from('plan_requests')
-        .update({ status: params.status, admin_note: params.admin_note ?? null })
-        .eq('id', params.id);
+      // CRITICAL: use server-side RPC so the subscriptions table is updated
+      // atomically with the plan_requests row. A plain UPDATE on plan_requests
+      // would mark the request approved without ever activating the paid plan,
+      // leaving the outlet stuck on free_demo.
+      const rpcName = params.status === 'approved'
+        ? 'admin_approve_plan_request'
+        : 'admin_reject_plan_request';
+      const { data: rpcResult, error } = await (supabase as any).rpc(rpcName, {
+        _request_id: params.id,
+        _admin_note: params.admin_note ?? null,
+      });
       if (error) throw error;
+      if (!rpcResult?.ok) throw new Error(rpcResult?.message ?? 'Action failed');
 
-      // Best-effort audit log (does not block on failure)
+      // Best-effort audit log (server already logs, this keeps legacy entries)
       try {
         const { logActivity } = await import('@/lib/activityLog');
         await logActivity({
@@ -228,6 +236,7 @@ export function useUpdatePlanRequest() {
       qc.invalidateQueries({ queryKey: ['admin'] });
       qc.invalidateQueries({ queryKey: ['plan_requests'] });
       qc.invalidateQueries({ queryKey: ['subscription'] });
+      qc.invalidateQueries({ queryKey: ['outlet'] });
     },
   });
 }

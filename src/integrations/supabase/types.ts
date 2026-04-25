@@ -272,6 +272,10 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancellation_reason: string | null
+          cancellation_reason_text: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           customer_address: string | null
           customer_name: string | null
@@ -284,6 +288,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           pickup_time: string | null
+          rider_id: string | null
           service_charge: number | null
           session_id: string | null
           special_instructions: string | null
@@ -295,8 +300,13 @@ export type Database = {
           transaction_id: string | null
           updated_at: string
           vehicle_number: string | null
+          waiter_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancellation_reason_text?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string | null
@@ -309,6 +319,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           pickup_time?: string | null
+          rider_id?: string | null
           service_charge?: number | null
           session_id?: string | null
           special_instructions?: string | null
@@ -320,8 +331,13 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           vehicle_number?: string | null
+          waiter_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
+          cancellation_reason_text?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string | null
@@ -334,6 +350,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           pickup_time?: string | null
+          rider_id?: string | null
           service_charge?: number | null
           session_id?: string | null
           special_instructions?: string | null
@@ -345,6 +362,7 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           vehicle_number?: string | null
+          waiter_id?: string | null
         }
         Relationships: [
           {
@@ -355,10 +373,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "orders_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "outlet_staff"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_table_id_fkey"
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_waiter_id_fkey"
+            columns: ["waiter_id"]
+            isOneToOne: false
+            referencedRelation: "outlet_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -427,6 +459,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      outlet_activity_resets: {
+        Row: {
+          cleared_types: string[]
+          counts: Json
+          created_at: string
+          id: string
+          outlet_id: string
+          reason: string
+          reset_by: string | null
+          reset_by_email: string | null
+        }
+        Insert: {
+          cleared_types?: string[]
+          counts?: Json
+          created_at?: string
+          id?: string
+          outlet_id: string
+          reason: string
+          reset_by?: string | null
+          reset_by_email?: string | null
+        }
+        Update: {
+          cleared_types?: string[]
+          counts?: Json
+          created_at?: string
+          id?: string
+          outlet_id?: string
+          reason?: string
+          reset_by?: string | null
+          reset_by_email?: string | null
+        }
+        Relationships: []
+      }
+      outlet_messages: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          metadata: Json
+          outlet_id: string
+          read_at: string | null
+          title: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          outlet_id: string
+          read_at?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          outlet_id?: string
+          read_at?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       outlet_settings: {
         Row: {
@@ -497,6 +598,50 @@ export type Database = {
             foreignKeyName: "outlet_settings_outlet_id_fkey"
             columns: ["outlet_id"]
             isOneToOne: true
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outlet_staff: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          outlet_id: string
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          outlet_id: string
+          phone?: string | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          outlet_id?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outlet_staff_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
             referencedRelation: "outlets"
             referencedColumns: ["id"]
           },
@@ -898,12 +1043,24 @@ export type Database = {
     Functions: {
       _gen_otp_code: { Args: never; Returns: string }
       admin_approve_outlet: { Args: { _outlet_id: string }; Returns: Json }
+      admin_approve_plan_request: {
+        Args: { _admin_note?: string; _request_id: string }
+        Returns: Json
+      }
       admin_regenerate_outlet_otp: {
         Args: { _outlet_id: string }
         Returns: Json
       }
       admin_reject_outlet: {
         Args: { _outlet_id: string; _reason?: string }
+        Returns: Json
+      }
+      admin_reject_plan_request: {
+        Args: { _admin_note?: string; _request_id: string }
+        Returns: Json
+      }
+      admin_reset_outlet_activity: {
+        Args: { _outlet_id: string; _reason: string; _types: string[] }
         Returns: Json
       }
       expire_lapsed_subscriptions: { Args: never; Returns: number }
@@ -939,6 +1096,7 @@ export type Database = {
         | "picked_up"
         | "out_for_delivery"
         | "delivered"
+        | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"
       outlet_access_status:
         | "pending"
@@ -1098,6 +1256,7 @@ export const Constants = {
         "picked_up",
         "out_for_delivery",
         "delivered",
+        "cancelled",
       ],
       order_type: ["dine_in", "takeaway", "delivery"],
       outlet_access_status: [
