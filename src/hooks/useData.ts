@@ -176,7 +176,7 @@ export function useOrders(outletId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, order_items(*), tables(table_number), bill_requests(*), payments(*, payment_proofs(*))')
+        .select('*, order_items(*), tables(table_number), bill_requests(*), payments(*, payment_proofs(*)), rider:rider_id(id, name, phone), waiter:waiter_id(id, name, phone)')
         .eq('outlet_id', outletId!)
         .order('created_at', { ascending: false });
       if (error) throw error;

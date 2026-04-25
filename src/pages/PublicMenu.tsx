@@ -106,7 +106,11 @@ export default function PublicMenu() {
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
 
   // Calculate charges based on order type
-  const deliveryChargesForOrder = orderType === 'delivery' ? outletDeliveryCharges : 0;
+  // IMPORTANT: Delivery charge applies ONLY ONCE per active session.
+  // If customer already has an active delivery order in this session, additional
+  // orders in the same delivery flow do NOT add another delivery fee.
+  const isAdditionalDeliveryInSession = orderType === 'delivery' && orderIds.length > 0;
+  const deliveryChargesForOrder = orderType === 'delivery' && !isAdditionalDeliveryInSession ? outletDeliveryCharges : 0;
   const taxPercentage = Number(outletSettings?.tax_rate) || 0;
   const serviceChargePercentage = Number(outletSettings?.service_charge_rate) || 0;
   const taxAmount = orderType === 'dine_in' ? (cartTotal * taxPercentage / 100) : 0;

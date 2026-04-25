@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Receipt, CheckCircle2, Clock, ChefHat, Bell, Truck, Upload, CreditCard, Banknote, ArrowRight, ShoppingBag, Printer } from 'lucide-react';
+import { Receipt, CheckCircle2, Clock, ChefHat, Bell, Truck, Upload, CreditCard, Banknote, ArrowRight, ShoppingBag, Printer, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusLabel, getTrackingStatusesForOrderType } from '@/lib/orderStatusConstants';
+import CancelOrderDialog from '@/components/public-menu/CancelOrderDialog';
 
 function generateReceiptHTML(opts: {
   outletName: string; address?: string; phone?: string; city?: string;
@@ -35,7 +36,7 @@ function generateReceiptHTML(opts: {
     <div class="line"></div>
     <div class="row total-row"><span>GRAND TOTAL</span><span>Rs.${opts.grandTotal.toLocaleString()}</span></div>
     <div class="line"></div>
-    <div class="center small" style="margin-top:8px"><p>Thank you for dining with us!</p><p>Powered by DineEase Pakistan</p></div>
+    <div class="center small" style="margin-top:8px"><p>Thank you for order</p></div>
   `;
 }
 
@@ -92,6 +93,25 @@ interface RoundData {
   payment_status: string;
   created_at?: string;
   order_items: { id: string; name: string; quantity: number; price: number; special_instructions?: string }[];
+  payments?: { id: string; method: string | null; status: string; cash_handling_mode?: string | null }[];
+}
+
+function formatPaymentMethodLabel(
+  method?: string | null,
+  cashMode?: string | null,
+  orderType?: 'dine_in' | 'takeaway' | 'delivery'
+): string | null {
+  if (!method) return null;
+  if (method === 'cash') {
+    if (orderType === 'delivery') return 'Cash on Delivery';
+    if (cashMode === 'counter') return 'Cash (At Counter)';
+    if (cashMode === 'waiter') return 'Cash (Via Waiter)';
+    return 'Cash';
+  }
+  if (method === 'bank_transfer') return 'Bank Transfer';
+  if (method === 'jazzcash') return 'JazzCash';
+  if (method === 'easypaisa') return 'EasyPaisa';
+  return method.charAt(0).toUpperCase() + method.slice(1);
 }
 
 async function fileToBase64(file: File) {
@@ -121,6 +141,7 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
   const [billRequested, setBillRequested] = useState(false);
   const [cashMode, setCashMode] = useState<'counter' | 'waiter' | null>(null);
   const [cashSubmitted, setCashSubmitted] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   // Auto-set cash mode for delivery orders
   useEffect(() => {
@@ -143,7 +164,7 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
     if (orderIds.length === 0) return;
     const fetchAll = async () => {
       const { data } = await supabase.from('orders')
-        .select('id, status, total, subtotal, tax_amount, service_charge, delivery_charge, payment_status, created_at, order_items(*)')
+        .select('id, status, total, subtotal, tax_amount, service_charge, delivery_charge, payment_status, created_at, order_items(*), payments(id, method, status, cash_handling_mode)')
         .in('id', orderIds);
       if (data) {
         const sorted = orderIds.map(id => data.find(d => d.id === id)).filter(Boolean) as RoundData[];
@@ -178,6 +199,24 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
   const allItems = rounds.flatMap(r => r.order_items || []);
   const billDate = new Date().toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
   const billNo = `BILL-${orderIds[0].slice(0, 8).toUpperCase()}`;
+
+  // Derive recorded payment method from any round's payments (latest first)
+  const recordedPayment = (() => {
+    for (const r of rounds) {
+      const p = (r.payments || [])[0];
+      if (p && p.method) return p;
+    }
+    return null;
+  })();
+  const recordedMethodLabel = recordedPayment
+    ? formatPaymentMethodLabel(recordedPayment.method, recordedPayment.cash_handling_mode, orderType)
+    : null;
+  const currentSelectionLabel = paymentMethod === 'cash'
+    ? formatPaymentMethodLabel('cash', cashMode, orderType)
+    : paymentMethod === 'online' && onlineMethod
+      ? formatPaymentMethodLabel(onlineMethod, null, orderType)
+      : null;
+  const displayPaymentMethod = recordedMethodLabel || currentSelectionLabel;
 
   const anyUnpaid = rounds.some(r => r.payment_status === 'unpaid' || r.payment_status === 'rejected');
   const anyPending = rounds.some(r => r.payment_status === 'pending_verification');
@@ -286,7 +325,7 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
       outletName, address: outletInfo?.address || '', phone: outletInfo?.phone || '', city: outletInfo?.city || '',
       billNo, billDate, tableNumber, items: allItems,
       rawSubtotal, taxPct, calculatedTax, servicePct, calculatedService, combinedDelivery, grandTotal,
-      paymentMethod: paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'online' ? 'Online' : undefined,
+      paymentMethod: displayPaymentMethod || undefined,
     });
     const printWindow = window.open('', '_blank');
     if (!printWindow) { toast.error('Please allow popups to print'); return; }
@@ -357,8 +396,8 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
               <div className="px-4 pt-3 pb-1 space-y-1">
                 {round.order_items?.map((item: any) => (
                   <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-foreground">{item.quantity}× {item.item_name}</span>
-                    <span className="text-muted-foreground">Rs.{item.total_price}</span>
+                    <span className="text-foreground">{item.quantity}× {item.name}</span>
+                    <span className="text-muted-foreground">Rs.{(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -429,8 +468,8 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
                   )}
                   {round.order_items?.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-foreground">{item.quantity}× {item.item_name}</span>
-                      <span className="font-medium text-foreground">Rs.{item.total_price}</span>
+                      <span className="text-foreground">{item.quantity}× {item.name}</span>
+                      <span className="font-medium text-foreground">Rs.{(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -457,6 +496,12 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
                 <div className="flex justify-between font-heading font-extrabold text-base text-foreground pt-2 border-t">
                   <span>Grand Total</span><span>Rs.{grandTotal.toLocaleString()}</span>
                 </div>
+                {displayPaymentMethod && (
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1.5 border-t border-dashed">
+                    <span>Payment Method</span>
+                    <span className="font-semibold text-foreground">{displayPaymentMethod}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -691,12 +736,36 @@ export default function OrderTracking({ orderIds, outletName, orderType, outletS
         </div>
       )}
 
-      {/* Order More */}
-      <div className="px-4 pb-8">
+      {/* Order More + Cancel */}
+      <div className="px-4 pb-8 space-y-3">
         <Button variant="outline" className="w-full rounded-2xl py-5 gap-2 font-bold" onClick={onOrderMore}>
           <ShoppingBag className="h-4 w-4" /> Order More
         </Button>
+        {(() => {
+          const cancellable = rounds.length > 0
+            && rounds.every(r => (r.status === 'pending' || r.status === 'accepted') && r.payment_status !== 'paid');
+          if (!cancellable) return null;
+          return (
+            <Button
+              variant="ghost"
+              className="w-full rounded-2xl py-4 gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => setCancelOpen(true)}
+            >
+              <XCircle className="h-4 w-4" /> Cancel Order
+            </Button>
+          );
+        })()}
       </div>
+
+      <CancelOrderDialog
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        orderIds={orderIds}
+        onCancelled={() => {
+          setRounds(prev => prev.map(r => ({ ...r, status: 'cancelled' })));
+          if (onAllClosed) onAllClosed();
+        }}
+      />
 
     </div>
   );

@@ -3,11 +3,56 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
-// Generate a notification beep using Web Audio API
+// Shared AudioContext that survives across hook calls and is unlocked on first user gesture.
+// This is required by browser autoplay policies — without a user interaction first, sound
+// will be silently blocked on most mobile browsers and on desktop Chrome/Safari.
+let sharedAudioCtx: AudioContext | null = null;
+let audioUnlocked = false;
+
+function ensureAudioUnlocked() {
+  if (audioUnlocked && sharedAudioCtx) return;
+  try {
+    if (!sharedAudioCtx) {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctx) return;
+      sharedAudioCtx = new Ctx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => { /* ignore */ });
+    }
+    // Play a silent buffer to fully unlock audio on iOS Safari.
+    const buf = sharedAudioCtx.createBuffer(1, 1, 22050);
+    const src = sharedAudioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(sharedAudioCtx.destination);
+    src.start(0);
+    audioUnlocked = true;
+  } catch { /* ignore */ }
+}
+
+// Install one-time global gesture listeners so sound works on every device the
+// outlet owner is logged in on, without each tab needing its own click first.
+if (typeof window !== 'undefined') {
+  const unlock = () => ensureAudioUnlocked();
+  window.addEventListener('pointerdown', unlock, { once: false, passive: true });
+  window.addEventListener('keydown', unlock, { once: false, passive: true });
+  window.addEventListener('touchstart', unlock, { once: false, passive: true });
+  // Re-unlock when tab becomes visible (mobile browsers suspend audio in background)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && sharedAudioCtx?.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => { /* ignore */ });
+    }
+  });
+}
+
+// Generate a notification chime using Web Audio API on the shared context
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
+    ensureAudioUnlocked();
+    const ctx = sharedAudioCtx;
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ });
+
     const playBeep = (startTime: number, freq: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -18,19 +63,18 @@ function playNotificationSound() {
       gain.gain.setValueAtTime(0.3, startTime);
       gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
       osc.start(startTime);
-      osc.stop(startTime + 0.3);
+      osc.stop(startTime + 0.32);
     };
 
     const now = ctx.currentTime;
-    playBeep(now, 880);       // A5
+    playBeep(now, 880);        // A5
     playBeep(now + 0.15, 1100); // C#6
     playBeep(now + 0.30, 1320); // E6
-
-    setTimeout(() => ctx.close(), 2000);
-  } catch (e) {
+  } catch {
     // Audio not available, silently ignore
   }
 }
+
 
 export function useOrderNotifications(outletId?: string) {
   const queryClient = useQueryClient();

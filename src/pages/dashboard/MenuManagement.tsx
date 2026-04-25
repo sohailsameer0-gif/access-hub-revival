@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useOutlet, useMenuCategories, useMenuItems, useCreateCategory, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem, useDeleteCategory, useSubscriptionStatus } from '@/hooks/useData';
+import { useOutlet, useMenuCategories, useMenuItems, useCreateCategory, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem, useDeleteCategory } from '@/hooks/useData';
+import { useResolvedSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +17,7 @@ export default function MenuManagement() {
   const { data: outlet } = useOutlet();
   const { data: categories } = useMenuCategories(outlet?.id);
   const { data: items } = useMenuItems(outlet?.id);
-  const { data: sub } = useSubscriptionStatus(outlet?.id);
+  const { data: sub } = useResolvedSubscription(outlet?.id);
   const createCategory = useCreateCategory();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
@@ -27,8 +28,10 @@ export default function MenuManagement() {
   const [showAddItem, setShowAddItem] = useState(false);
   const [itemForm, setItemForm] = useState({ name: '', price: '', description: '', category_id: '', discounted_price: '', tags: [] as string[], image_url: '' });
 
-  const canAddItem = !sub?.isDemo || (items?.length ?? 0) < 15;
-  const isLocked = sub?.isExpired;
+  const itemLimit = sub?.limits?.maxMenuItems ?? 0; // 0 = unlimited
+  const currentCount = items?.length ?? 0;
+  const canAddItem = !sub?.canAccessApp ? false : (itemLimit === 0 || currentCount < itemLimit);
+  const isLocked = !sub?.canAccessApp;
 
   if (!outlet) return <p className="text-muted-foreground">Please set up your outlet first.</p>;
 
@@ -43,7 +46,7 @@ export default function MenuManagement() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canAddItem) return toast.error('Demo limit reached (15 items)');
+    if (!canAddItem) return toast.error(itemLimit > 0 ? `Plan limit reached (${itemLimit} items). Upgrade to add more.` : 'Your plan does not allow adding items right now.');
     try {
       await createItem.mutateAsync({
         name: itemForm.name,
@@ -73,7 +76,7 @@ export default function MenuManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Menu</h1>
-          <p className="text-muted-foreground">{items?.length ?? 0} items{sub?.isDemo ? '/15' : ''} · {categories?.length ?? 0} categories</p>
+          <p className="text-muted-foreground">{currentCount} items{itemLimit > 0 ? `/${itemLimit}` : ''} · {categories?.length ?? 0} categories</p>
         </div>
       </div>
 

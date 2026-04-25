@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, startOfDay, endOfDay, isWithinInterval, parseISO, isSameDay } from 'date-fns';
-import { CalendarIcon, DollarSign, ShoppingCart, CreditCard, TrendingUp, UtensilsCrossed, Truck, ShoppingBag, Download, Filter } from 'lucide-react';
+import { CalendarIcon, DollarSign, ShoppingCart, CreditCard, TrendingUp, UtensilsCrossed, Truck, ShoppingBag, Download, Filter, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function useOutletPayments(outletId?: string) {
@@ -62,6 +62,20 @@ export default function ReportsPage() {
     if (!orders) return [];
     return orders.filter(o => {
       const date = parseISO(o.created_at!);
+      if (!isWithinInterval(date, { start: rangeFrom, end: rangeTo })) return false;
+      if (filterOrderType !== 'all' && (o as any).order_type !== filterOrderType) return false;
+      // Exclude cancelled orders from main reports — shown separately
+      if ((o as any).status === 'cancelled') return false;
+      return true;
+    });
+  }, [orders, rangeFrom, rangeTo, filterOrderType]);
+
+  const cancelledOrders = useMemo(() => {
+    if (!orders) return [];
+    return orders.filter(o => {
+      if ((o as any).status !== 'cancelled') return false;
+      const dateStr = (o as any).cancelled_at || o.created_at;
+      const date = parseISO(dateStr!);
       if (!isWithinInterval(date, { start: rangeFrom, end: rangeTo })) return false;
       if (filterOrderType !== 'all' && (o as any).order_type !== filterOrderType) return false;
       return true;
@@ -319,6 +333,9 @@ export default function ReportsPage() {
           <TabsTrigger value="daily">Daily Breakdown</TabsTrigger>
           <TabsTrigger value="payments">Payment History</TabsTrigger>
           <TabsTrigger value="methods">Method Breakdown</TabsTrigger>
+          <TabsTrigger value="cancelled" className="gap-1">
+            <XCircle className="h-3.5 w-3.5" /> Cancelled ({cancelledOrders.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily">
@@ -436,6 +453,63 @@ export default function ReportsPage() {
                   );
                 })}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cancelled">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <XCircle className="h-5 w-5 text-destructive" />
+                Cancelled Orders ({cancelledOrders.length})
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Orders cancelled by customer or staff. Excluded from collection totals.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {cancelledOrders.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No cancelled orders in this period.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Cancelled At</TableHead>
+                        <TableHead>Cancelled By</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead className="text-right">Order Total</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cancelledOrders.map((o: any) => {
+                        const typeLabels: Record<string, string> = { dine_in: 'Dine-in', takeaway: 'Takeaway', delivery: 'Delivery' };
+                        const cancelledAt = o.cancelled_at || o.updated_at || o.created_at;
+                        const reasonText = o.cancellation_reason_text || o.cancellation_reason || '—';
+                        return (
+                          <TableRow key={o.id}>
+                            <TableCell className="font-mono text-xs">#{o.id.slice(0, 8)}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-xs">{typeLabels[o.order_type] || o.order_type}</Badge></TableCell>
+                            <TableCell className="text-sm">{o.customer_name || '—'}</TableCell>
+                            <TableCell className="text-sm">{format(parseISO(cancelledAt), 'dd MMM yyyy, hh:mm a')}</TableCell>
+                            <TableCell className="text-sm capitalize">{o.cancelled_by || '—'}</TableCell>
+                            <TableCell className="text-sm max-w-[240px] truncate" title={reasonText}>{reasonText}</TableCell>
+                            <TableCell className="text-right font-medium line-through text-muted-foreground">Rs. {Number(o.total || 0).toLocaleString()}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs border-destructive/40 text-destructive">Cancelled</Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
